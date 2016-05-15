@@ -66,6 +66,7 @@ CONCURRENT_REQUESTS = 2
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     'testCrawler.pipelines.JsonWriterPipeline': 800,
+    'testCrawler.pipelines.XmlExportPipeline': 801,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
