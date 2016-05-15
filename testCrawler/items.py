@@ -9,9 +9,9 @@ import scrapy
 
 
 class TestcrawlerItem(scrapy.Item):
-    # define the fields for your item here like:
-    Title = scrapy.Field()
     Url = scrapy.Field()
+    Type = scrapy.Field()
     Status = scrapy.Field()
+    Title = scrapy.Field()
     Robot = scrapy.Field()
     pass

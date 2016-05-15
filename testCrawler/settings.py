@@ -53,7 +53,7 @@ CONCURRENT_REQUESTS = 2
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 #DOWNLOADER_MIDDLEWARES = {
-#    'testCrawler.middlewares.MyCustomDownloaderMiddleware': 543,
+#    'testCrawler.middlewares.CustomDownloaderMiddleware': 543,
 #}
 
 # Enable or disable extensions
