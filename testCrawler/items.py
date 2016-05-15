@@ -10,6 +10,7 @@ import scrapy
 
 class TestcrawlerItem(scrapy.Item):
     Url = scrapy.Field()
+    UrlSource = scrapy.Field()
     Type = scrapy.Field()
     Status = scrapy.Field()
     Title = scrapy.Field()

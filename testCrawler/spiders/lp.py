@@ -11,17 +11,22 @@ class LpSpider(scrapy.Spider):
     custom_settings = {
         'DEPTH_LIMIT': 1,
     }
-    handle_httpstatus_list = [404]
+    handle_httpstatus_list = [404, 500, 504]
     allowed_domains = ["orbitz.com"]
     start_urls = (
         'https://www.orbitz.com/Chicago-Hotels.d178248.Travel-Guide-Hotels',
         'https://www.orbitz.com/lp/flights/178248/flights-from-chicago'
     )
+
     regex_page_type = {'Travel-Guide-Hotels': r'Travel-Guide-Hotels',
                        'Flight-Origin-City': r'lp/flights/\d+/\D+',
-                       'Flights-OnD': r'lp/flights/\d+/\d+/'}
+                       'Flights-OnD': r'lp/flights/\d+/\d+/'
+                       }
 
-    page_types = ['Travel-Guide-Hotels', 'Flight-Origin-City', 'Flights-OnD']
+    page_types = ['Travel-Guide-Hotels',
+                  'Flight-Origin-City',
+                  'Flights-OnD'
+                  ]
 
     def parse(self, response):
         page_url = response.url
@@ -37,13 +42,14 @@ class LpSpider(scrapy.Spider):
             # page meta robot
             robot = response.css('meta[name*=robots]::attr(content)').extract()[0]
 
-            yield TestcrawlerItem(
-                Url=page_url,
-                Type=page_name,
-                Title=h1,
-                Status=page_status,
-                Robot=robot
-            )
+            if robot != 'index,follow':
+                yield TestcrawlerItem(
+                    Url=page_url,
+                    Type=page_name,
+                    Title=h1,
+                    Status=page_status,
+                    Robot=robot
+                )
 
             # Feed landing page links to spider
             for link in links_on_page:
@@ -54,7 +60,8 @@ class LpSpider(scrapy.Spider):
             yield TestcrawlerItem(
                 Url=page_url,
                 Type=page_name,
-                Status=page_status
+                Status=page_status,
+                UrlSource=response.request.headers['Referer']
             )
 
     @staticmethod
