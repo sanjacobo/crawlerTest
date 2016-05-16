@@ -13,10 +13,9 @@ class LpSpider(scrapy.Spider):
     }
     handle_httpstatus_list = [404, 500, 504]
     allowed_domains = ["orbitz.com"]
-    start_urls = (
-        'https://www.orbitz.com/Chicago-Hotels.d178248.Travel-Guide-Hotels',
-        'https://www.orbitz.com/lp/flights/178248/flights-from-chicago'
-    )
+    f = open("start_urls.csv")
+    start_urls = [url.strip() for url in f.readlines()]
+    f.close()
 
     regex_page_type = {'Travel-Guide-Hotels': r'Travel-Guide-Hotels',
                        'Flight-Origin-City': r'lp/flights/\d+/\D+',
@@ -42,7 +41,7 @@ class LpSpider(scrapy.Spider):
             # page meta robot
             robot = response.css('meta[name*=robots]::attr(content)').extract()[0]
 
-            if robot != 'index,follow':
+            if str(robot).lower().replace(" ", "") != 'index,follow':
                 yield TestcrawlerItem(
                     Url=page_url,
                     Type=page_name,
@@ -53,25 +52,17 @@ class LpSpider(scrapy.Spider):
 
             # Feed landing page links to spider
             for link in links_on_page:
-                if self.url_is_landing_page(self, link):
+                if self.get_page_type(self, link) is not None:
                     yield scrapy.Request(link, callback=self.parse)
         else:
-            print "Parse error page"
+            url_source = response.request.headers['Referer']
+
             yield TestcrawlerItem(
                 Url=page_url,
                 Type=page_name,
                 Status=page_status,
-                UrlSource=response.request.headers['Referer']
+                UrlSource=url_source
             )
-
-    @staticmethod
-    def url_is_landing_page(self, url):
-        output = False
-        for __page__ in self.page_types:
-            if re.compile(self.regex_page_type[__page__]).search(url) is not None:
-                output = True
-                break
-        return output
 
     @staticmethod
     def get_page_type(self, url):
