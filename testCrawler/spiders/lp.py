@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from testCrawler.items import TestcrawlerItem
-import re
 from scrapy.utils.response import get_base_url
 import urlparse
+from testCrawler.spiders.DataProvider import Data
 
 
 class LpSpider(scrapy.Spider):
@@ -12,26 +12,28 @@ class LpSpider(scrapy.Spider):
         'DEPTH_LIMIT': 1,
     }
     handle_httpstatus_list = [404, 500, 504]
-    allowed_domains = ["orbitz.com"]
-    f = open("start_urls.csv")
-    start_urls = [url.strip() for url in f.readlines()]
-    f.close()
 
-    regex_page_type = {'Travel-Guide-Hotels': r'Travel-Guide-Hotels',
-                       'Flight-Origin-City': r'lp/flights/\d+/\D+',
-                       'Flights-OnD': r'lp/flights/\d+/\d+/'
-                       }
+    #run with: scrapy crawl lp -a pos=ORB
 
-    page_types = ['Travel-Guide-Hotels',
-                  'Flight-Origin-City',
-                  'Flights-OnD'
-                  ]
+    def __init__(self, pos='ORB', *args, **kwargs):
+        super(LpSpider, self).__init__(*args, **kwargs)
+        # set pages data
+        data = Data()
+        self.page_types = data.page_types
+        self.regex_page_type = data.regex_page_type
+        self.find_page_type = data.find_page_type
+        # set domains
+        self.allowed_domains = [data.domains[pos]]
+        # set start urls
+        f = open("start_urls_" + pos + ".csv")
+        self.start_urls = [url.strip() for url in f.readlines()]
+        f.close()
 
     def parse(self, response):
         page_url = response.url
         base_url = get_base_url(response)
         page_status = response.status
-        page_name = self.get_page_type(self, page_url)
+        page_name = self.find_page_type(self, page_url)
 
         if page_status == 200:
 
@@ -52,7 +54,7 @@ class LpSpider(scrapy.Spider):
 
             # Feed landing page links to spider
             for link in links_on_page:
-                if self.get_page_type(self, link) is not None:
+                if self.find_page_type(self, link) is not None:
                     yield scrapy.Request(link, callback=self.parse)
         else:
             url_source = response.request.headers['Referer']
@@ -63,12 +65,3 @@ class LpSpider(scrapy.Spider):
                 Status=page_status,
                 UrlSource=url_source
             )
-
-    @staticmethod
-    def get_page_type(self, url):
-        output = None
-        for __page__ in self.page_types:
-            if re.compile(self.regex_page_type[__page__]).search(url) is not None:
-                output = __page__
-                break
-        return output
